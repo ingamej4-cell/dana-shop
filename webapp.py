@@ -6,12 +6,18 @@ import telebot
 import logging
 import os
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Підключення до Google Sheets
+# ==== Правильний шлях до credentials.json (Render / локально) ====
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+
+# На Render секретний файл монтується в /etc/secrets/
+creds_path = '/etc/secrets/credentials.json'
+if not os.path.exists(creds_path):
+    creds_path = 'credentials.json'  # локально
+
+creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(GOOGLE_SHEET_KEY).get_worksheet(0)
 
@@ -19,11 +25,9 @@ sheet = client.open_by_key(GOOGLE_SHEET_KEY).get_worksheet(0)
 BOT_TOKEN = "8761808805:AAGB2YrGSScbTra1j8BxvcmLyemojCuz354"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-
 @app.route('/')
 def index():
     return render_template('index.html', currency=CURRENCY)
-
 
 @app.route('/api/products')
 def get_products():
@@ -41,7 +45,6 @@ def get_products():
             })
     return jsonify(products)
 
-
 @app.route('/api/order', methods=['POST'])
 def create_order():
     data = request.json
@@ -52,15 +55,15 @@ def create_order():
     address = data.get('address')
     phone = data.get('phone')
     payment = data.get('payment')
-
+    
     try:
         cell = sheet.find(product_id, in_column=1)
         row = sheet.row_values(cell.row)
         product_name = row[1]
         price = row[2]
-    except:
-        return jsonify({"status": "error", "message": "Товар не знайдено"}), 404
-
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 404
+    
     admin_msg = (
         f"🔥 *НОВЕ ЗАМОВЛЕННЯ!*\n\n"
         f"🛍 *{product_name}*\n"
@@ -75,6 +78,6 @@ def create_order():
     bot.send_message(ADMIN_CHAT_ID, admin_msg, parse_mode="Markdown")
     return jsonify({"status": "ok"})
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
