@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from config import GOOGLE_SHEET_KEY, CURRENCY, ADMIN_CHAT_ID
@@ -27,8 +27,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 @app.route('/')
 def index():
-    from flask import send_from_directory
-return send_from_directory('.', 'index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/products')
 def get_products():
