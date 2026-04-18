@@ -27,7 +27,8 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 @app.route('/')
 def index():
-    return render_template('index.html', currency=CURRENCY)
+    from flask import send_from_directory
+return send_from_directory('.', 'index.html')
 
 @app.route('/api/products')
 def get_products():
