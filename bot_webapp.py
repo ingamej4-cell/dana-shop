@@ -59,7 +59,7 @@ def catalog(message):
     markup = types.InlineKeyboardMarkup()
     webapp_btn = types.InlineKeyboardButton(
         text="🛒 ВІДКРИТИ КАТАЛОГ",
-        url="http://127.0.0.1:5000"
+        url="https://dana-shop.onrender.com"
     )
     markup.add(webapp_btn)
     bot.send_message(
